@@ -1,0 +1,32 @@
+apply plugin: 'groovy'
+apply plugin: 'application'
+apply plugin: 'eclipse'
+
+mainClassName = 'com.curiousattemptbunny.git.jira.Cli'
+
+repositories {
+	mavenCentral()
+	mavenRepo urls: ['https://maven.atlassian.com/content/repositories/atlassian-public', 'http://download.java.net/maven/2']
+	flatDir(dirs: file('lib'))
+}
+
+dependencies {
+	groovy 'org.codehaus.groovy:groovy-all:1.8.0'
+	
+	compile 'com.goodercode:graffiti:1.0-SNAPSHOT'
+	
+	compile 'org.mortbay.jetty:jetty:6.1.25'
+	compile 'org.mortbay.jetty:jetty-plus:6.1.25'
+	compile 'org.mortbay.jetty:jetty-naming:6.1.25'
+	
+	compile 'com.atlassian.jira:jira-rest-java-client:0.2'
+	compile 'com.sun.jersey:jersey-client:1.5'
+	compile 'com.sun.jersey:jersey-core:1.5'
+	compile 'commons-httpclient:commons-httpclient:3.1'
+	compile 'org.codehaus.jettison:jettison:1.1'
+	compile 'com.sun.xml.bind:jaxb-impl:2.2.3'
+	compile 'org.codehaus.jackson:jackson-core-asl:1.5.5'
+	compile 'org.codehaus.jackson:jackson-mapper-asl:1.5.5'
+	compile 'org.codehaus.jackson:jackson-jaxrs:1.5.5'
+	compile 'org.codehaus.jackson:jackson-xc:1.5.5'
+}

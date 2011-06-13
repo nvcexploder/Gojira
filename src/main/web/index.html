@@ -1,0 +1,50 @@
+<html>
+<head>
+	<script src="http://yui.yahooapis.com/3.3.0/build/yui/yui-min.js" charset="utf-8"></script>
+	<script>
+YUI().use("autocomplete", "autocomplete-highlighters", "io", "json", function (Y) {
+	Y.one('#from').plug(Y.Plugin.AutoComplete, {
+	    resultHighlighter: 'phraseMatch',
+	    resultListLocator: 'commits',
+	    resultTextLocator: 'hash',
+	    source: 'commits?q={query}'
+	});
+	Y.one('#to').plug(Y.Plugin.AutoComplete, {
+	    resultHighlighter: 'phraseMatch',
+	    resultListLocator: 'commits',
+	    resultTextLocator: 'hash',
+	    source: 'commits?q={query}' // TODO limit to commits after #from
+	});
+	Y.one('#go').on('click', function() {
+		var container = Y.one('#issues');
+		container.set('innerHTML', '');
+		    		
+		var from = Y.one('#from').get('value');
+		var to = Y.one('#to').get('value');
+		Y.io('issues?from='+from+'&to='+to, {
+		    method: 'GET',
+		    on: {
+		        success: function (id, result) {
+		    		var issues = Y.JSON.parse(result.responseText).issues;
+		    		for(issue in issues) {
+		    			container.append('<li>'+issues[issue].id+'</li>');	
+		    		}
+		        },
+		        failure: function (id, result) {
+		        }
+		    }
+		});
+	});
+});
+	</script>
+</head>
+<body class="yui3-skin-sam">
+	<div>
+		<label>Enter git commit range:</label><br>
+		From <input id="from" type="text"> to <input id="to" type="text">
+		<input id="go" type="submit" value="Go">
+	</div>
+	<div id="issues">
+	</div>
+</body>
+</html>
