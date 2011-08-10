@@ -23,12 +23,12 @@ jQuery(function($){
         initialize: function() {
             Commits.bind('reset', this.addAll, this);
 
-            Commits.fetch()
+            Commits.fetch({ data: jQuery.param({from: Commits.size()}) })
         },
 
         addOne: function(commit) {
-            var view = new CommitView({model: commit});
-            this.$("#commit-list").append(view.render().el);
+			var view = new CommitView({model: commit});
+			this.$("#commit-list").append(view.render().el);
         },
 
         addAll: function() {

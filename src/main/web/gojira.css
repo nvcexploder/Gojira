@@ -18,3 +18,15 @@
     margin-right: auto;
     width: 500px;
 }
+
+.commit {
+	font-family: monospace;
+}
+
+#commit-list {
+	padding: 0px;
+}
+
+#commit-list li {
+	list-style: none;
+}

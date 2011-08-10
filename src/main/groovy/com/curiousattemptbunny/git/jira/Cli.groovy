@@ -22,7 +22,9 @@ class Cli {
             line.substring(line.indexOf(' ')).eachMatch( /([A-Z]+-[0-9]+)/) {
                 commit.issues << it[1]
             }
-            commits << commit
+            if (commit.issues) {
+	            commits << commit
+	        }
         }
         return commits
     }()
@@ -41,7 +43,10 @@ class Cli {
 
 	@Get('/commits')
 	def get_commits() {
-		def json = new groovy.json.JsonBuilder(commitIssues[0..100])
+		def from = ((params.from ?: 0) as Integer)
+		def to = from+100
+		def commits = []
+		def json = new groovy.json.JsonBuilder(commitIssues[from..to])
 		json.toString()
 	}
 	
