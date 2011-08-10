@@ -6,4 +6,6 @@ bin/
 build/
 *.iml
 *.ipr
+*.iws
 .idea/
+out/
