@@ -21,18 +21,17 @@
         </div>
         -->
         <div id="commits">
-            <ul id="commit-list"></ul>
+        	<table id="commit-list">
+        	</table>
         </div>
         <div id="loading"></div>
 	</div>
 
     <script type="text/template" id="item-template">
-        <div class="commit">
-			<span>${id}.${hash}</span>
-			{{each issues}}
-				- <a href="${$value.link}" target="_blank">${$value.id}</a>
-        	{{/each}}
-        </div>
+        <td class="commit-hash">${id}.${hash}</td>
+        <td class="commit-issue">
+			<a href="${issue.link}" target="_blank">${issue.id}</a><br/>
+        </td>
     </script>
 </body>
 </html>

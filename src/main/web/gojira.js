@@ -1,6 +1,6 @@
 jQuery(function($){
     window.Commit = Backbone.Model.extend({
-        attributes : ["id", "hash", "issues"]
+
     });
 
     window.CommitList = Backbone.Collection.extend({
@@ -9,7 +9,7 @@ jQuery(function($){
     });
 
     window.CommitView = Backbone.View.extend({
-        tagName: "li",
+        tagName: "tr",
         template: $("#item-template").template(),
         render: function() {
             var element = jQuery.tmpl(this.template, this.model.toJSON());
@@ -39,7 +39,8 @@ jQuery(function($){
         },
         
         scroll: function() {
-			if ($(window).scrollTop() == $(document).height() - $(window).height()){
+        	console.log( $(window).scrollTop() + " vs " + $(document).height() + " - " + $(window).height() + " == " + ($(document).height() - $(window).height()) )
+			if ($(window).scrollTop() + 50 >= $(document).height() - $(window).height()){
 				Commits.fetch({ add: true, data: jQuery.param({from: Commits.size()}) })
 			}
         }

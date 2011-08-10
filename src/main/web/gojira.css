@@ -30,16 +30,17 @@
 	margin-top: 74px;
 }
 
-.commit {
-	font-family: monospace;
+#commit-list td {
+	vertical-align: top;
+	padding-right: 5px;
 }
 
-#commit-list {
-	padding: 0px;
+.commit-hash {
+
 }
 
-#commit-list li {
-	list-style: none;
+.commit-issue {
+
 }
 
 #loading {
