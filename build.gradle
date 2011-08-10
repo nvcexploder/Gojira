@@ -1,6 +1,7 @@
 apply plugin: 'groovy'
 apply plugin: 'application'
 apply plugin: 'eclipse'
+apply plugin: 'idea'
 
 mainClassName = 'com.curiousattemptbunny.git.jira.Cli'
 
