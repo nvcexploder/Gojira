@@ -3,15 +3,25 @@ package com.curiousattemptbunny.git.jira
 import graffiti.*
 
 class Cli {
-	Properties config = new Properties()
+    private static final File configFile = new File('config.properties')
+    Properties config = new Properties()
+
 	@Lazy(soft=true) def commitHashes = {
 		"git --git-dir=$config.repository/.git rev-list master".execute().text.split('\n').collect { it[0..7] }
 	}()
 	
 	Cli() {
-		config.load new File('config.properties').newInputStream()
+		if (configFile.exists()) {
+            config.load configFile.newInputStream()
+        }
 	}
-	
+
+    @Get('/configured')
+    def get_configured() {
+        def json = new groovy.json.JsonBuilder(configured: (config.repository != null))
+		json.toString()
+    }
+
 	@Get('/commits')
 	def get_commits() {
 		def json = new groovy.json.JsonBuilder()

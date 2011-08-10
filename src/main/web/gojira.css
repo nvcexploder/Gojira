@@ -1,0 +1,14 @@
+#titleBar {
+    background-image: url("gojira-mini.png");
+    background-repeat: no-repeat;
+    border-bottom: 1px solid #aaa;
+    height: 63px;
+    padding-left: 75px;
+    margin-bottom: 10px;
+}
+
+#titleBar h1 {
+    font-family: Helvetica;
+    font-size: 46px;
+    margin-top: 0;
+}
