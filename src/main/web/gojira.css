@@ -12,3 +12,9 @@
     font-size: 46px;
     margin-top: 0;
 }
+
+#searchBar {
+    margin-left: auto;
+    margin-right: auto;
+    width: 500px;
+}

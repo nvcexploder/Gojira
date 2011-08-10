@@ -9,6 +9,23 @@ class Cli {
 	@Lazy(soft=true) def commitHashes = {
 		"git --git-dir=$config.repository/.git rev-list master".execute().text.split('\n').collect { it[0..7] }
 	}()
+
+    @Lazy(soft=true) def commitIssues = {
+        def commitLines = "git --git-dir=$config.repository/.git log --pretty=oneline".execute().text.split('\n')
+        def commits = []
+        def commitCount = commitLines.size()
+        commitLines.eachWithIndex { line, i ->
+            def commit = [:]
+            commit.id = commitCount - i
+            commit.hash = line[0..6]
+            commit.issues = []
+            line.substring(line.indexOf(' ')).eachMatch( /([A-Z]+-[0-9]+)/) {
+                commit.issues << it[1]
+            }
+            commits << commit
+        }
+        return commits
+    }()
 	
 	Cli() {
 		if (configFile.exists()) {
@@ -24,25 +41,7 @@ class Cli {
 
 	@Get('/commits')
 	def get_commits() {
-		def json = new groovy.json.JsonBuilder()
-		json {
-			commits( commitHashes.findAll { it.startsWith(params.q) }.collect { [hash:it] } )
-		}
-		json.toString()
-	}
-
-	@Get('/issues')
-	def get_issues() {
-		def _issues = []
-		"git --git-dir=$config.repository/.git log ${params.from}..${params.to} --pretty=format:%s".execute().text.eachMatch( /([A-Z]+-[0-9]+)/) {
-			_issues << it[1]
-		}
-		_issues = _issues.unique().sort()
-		
-		def json = new groovy.json.JsonBuilder()
-		json {
-			issues( _issues.collect { [id:it] } )
-		}
+		def json = new groovy.json.JsonBuilder(commitIssues[0..100])
 		json.toString()
 	}
 	
