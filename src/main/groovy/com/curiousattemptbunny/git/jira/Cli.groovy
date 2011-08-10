@@ -20,7 +20,7 @@ class Cli {
             commit.hash = line[0..6]
             commit.issues = []
             line.substring(line.indexOf(' ')).eachMatch( /([A-Z]+-[0-9]+)/) {
-                commit.issues << it[1]
+                commit.issues << [id:it[1], link:config.issueUrl+it[1]]
             }
             if (commit.issues) {
 	            commits << commit

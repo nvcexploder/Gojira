@@ -1,7 +1,8 @@
-This sums it up:
+1. Create a config.properties file with these settings:
 
-http://i.imgur.com/z3DaA.gif
+repository=/path/to/my/repo
+issueUrl=http://somehost/jira/browse/
 
-To run:
+2. Launch using:
 
 ./gradlew run

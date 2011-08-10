@@ -27,7 +27,10 @@
 
     <script type="text/template" id="item-template">
         <div class="commit">
-			${id}.${hash} - ${issues}
+			<span>${id}.${hash}</span>
+			{{each issues}}
+				- <a href="${$value.link}" target="_blank">${$value.id}</a>
+        	{{/each}}
         </div>
     </script>
 </body>
