@@ -21,9 +21,12 @@ jQuery(function($){
     window.AppView = Backbone.View.extend({
         el: $("#app"),
         initialize: function() {
-            Commits.bind('reset', this.addAll, this);
-
-            Commits.fetch({ data: jQuery.param({from: Commits.size()}) })
+        	$(window).bind("scroll", this.scroll);
+        	
+            Commits.bind("reset", this.addAll, this);
+            Commits.bind("add", this.addOne, this);
+            
+            Commits.fetch();
         },
 
         addOne: function(commit) {
@@ -34,6 +37,12 @@ jQuery(function($){
         addAll: function() {
             Commits.each(this.addOne);
         },
+        
+        scroll: function() {
+			if ($(window).scrollTop() == $(document).height() - $(window).height()){
+				Commits.fetch({ add: true, data: jQuery.param({from: Commits.size()}) })
+			}
+        }
     });
 
     window.Commits = new CommitList;
