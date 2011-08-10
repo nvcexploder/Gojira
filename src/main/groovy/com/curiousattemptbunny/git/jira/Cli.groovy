@@ -6,10 +6,6 @@ class Cli {
     private static final File configFile = new File('config.properties')
     Properties config = new Properties()
 
-	@Lazy(soft=true) def commitHashes = {
-		"git --git-dir=$config.repository/.git rev-list master".execute().text.split('\n').collect { it[0..7] }
-	}()
-
     @Lazy(soft=true) def commitIssues = {
         def commitLines = "git --git-dir=$config.repository/.git log --pretty=oneline".execute().text.split('\n')
         def commits = []
