@@ -41,3 +41,9 @@
 #commit-list li {
 	list-style: none;
 }
+
+#loading {
+	background: #fff url("ajax-loader.gif");
+	height: 32px;
+	width: 32px;
+}
