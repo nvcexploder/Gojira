@@ -28,10 +28,26 @@
 	</div>
 
     <script type="text/template" id="item-template">
-        <td class="commit-hash">${id}.${hash}</td>
+        <td class="commit-hash" title="${id}.${hash}">${id}</td>
         <td class="commit-issue">
-        	<img src="${issue.status.iconUrl}" alt="${issue.status.name}" title="${issue.status.name}"/>
+        	<img src="${issue.status.iconUrl}"
+        		 alt="${issue.status.name}" title="${issue.status.name}"/>
 			<a href="${issue.link}" target="_blank">${issue.id}</a><br/>
+			{{if !issue.status.exists}}
+				<span class="notReleaseReady">
+					Issue does not exist
+				</span>
+			{{else}}
+				{{if !issue.status.releaseReady}}
+				<span class="notReleaseReady">
+					{{if issue.status.inQA}}
+						in QA
+					{{else}}
+						in development
+					{{/if}}
+				</span>
+				{{/if}}
+			{{/if}}
         </td>
        	<td class="commit-issue-summary">
         	${issue.summary}

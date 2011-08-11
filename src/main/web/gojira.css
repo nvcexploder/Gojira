@@ -30,21 +30,38 @@
 	margin-top: 74px;
 }
 
+#commit-list {
+	width: 100%;
+	border-spacing: 0;
+}
+
 #commit-list td {
 	vertical-align: top;
 	padding-right: 5px;
 }
 
 .commit-hash {
-
+	width: 40px;
 }
 
 .commit-issue {
-
+	width: 100px;
+	white-space: nowrap;
 }
 
 #loading {
 	background: #fff url("ajax-loader.gif");
 	height: 32px;
 	width: 32px;
+}
+
+.notReleaseReady {
+	color: #f00;
+	font-size: 0.8em;
+	display: block;
+	float: right;
+}
+
+.alt {
+	background: #ddd;
 }

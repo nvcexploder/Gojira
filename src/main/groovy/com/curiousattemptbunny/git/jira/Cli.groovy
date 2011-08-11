@@ -6,6 +6,7 @@ import com.atlassian.jira.rest.client.JiraRestClient
 import com.atlassian.jira.rest.client.NullProgressMonitor 
 import com.atlassian.jira.rest.client.domain.Issue 
 import com.atlassian.jira.rest.client.internal.jersey.JerseyJiraRestClientFactory 
+import com.atlassian.jira.rest.client.RestClientException
 
 class Cli {
     private static final File configFile = new File('config.properties')
@@ -14,10 +15,18 @@ class Cli {
 	JiraRestClient restClient
 	NullProgressMonitor pm = new NullProgressMonitor()
 	def issues = [:].withDefault { key ->
-		return restClient.getIssueClient().getIssue(key, pm) 		
+		try {
+			return restClient.getIssueClient().getIssue(key, pm) 		
+		} catch (RestClientException e) {
+			if (!e.getMessage().contains("Issue Does Not Exist")) {
+				throw e;
+			}
+			return null;
+		}
 	}
 	def issueStateIconUrl = [
 		"Open": "/images/icons/status_open.gif",
+		"Reopened": "/images/icons/status_open.gif",
 		"In Development": "/images/icons/status_inprogress.gif",
 		"In Progress": "/images/icons/status_inprogress.gif",
 		"In QA": "/images/icons/status_visible.gif",
@@ -25,8 +34,13 @@ class Cli {
 		"Resolved": "/images/icons/status_resolved.gif",
 		"Closed": "/images/icons/status_closed.gif",
 		"Completed": "/images/icons/status_closed.gif",
-		"Released": "/images/icons/status_closed.gif"
+		"Released": "/images/icons/status_closed.gif",
+		"Verified": "/images/icons/status_closed.gif"
 	]
+	def goodStates = [
+		"Released", "Completed", "Closed", "Resolved", "Pending Release", "Verified"
+	]
+	def qaStates = [ "In QA" ]
 			
     @Lazy(soft=true) def commitIssues = {
         def commitLines = "git --git-dir=$config.repository/.git log --date=short --format=%h#%ad#%an#%s".execute().text.split('\n')
@@ -76,12 +90,14 @@ class Cli {
 		commits.each { commit ->
 			if (commit.summary == null) {
 				def issue = issues[commit.issue.id]
-				commit.issue.summary = issue.summary
+				commit.issue.summary = issue?.summary
 				commit.issue.status = [
-					name: issue.status?.name.toString(),
-					iconUrl: config.jiraUrl+issueStateIconUrl[issue.status?.name.toString()]
+					name: issue?.status?.name.toString(),
+					iconUrl: config.jiraUrl+issueStateIconUrl[issue?.status?.name.toString()],
+					releaseReady: goodStates.contains(issue?.status?.name.toString()),
+					inQA: qaStates.contains(issue.status?.name.toString()),
+					exists: issue != null
 				]
-				//println "$issue.status.name -> $issue.status.self"
 			}
 		}
 		def json = new groovy.json.JsonBuilder(commits)

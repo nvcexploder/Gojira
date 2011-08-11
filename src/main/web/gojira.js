@@ -27,11 +27,18 @@ jQuery(function($){
             Commits.bind("add", this.addOne, this);
             
             Commits.fetch();
+            
+            this.nextAlt = true;
         },
 
         addOne: function(commit) {
 			var view = new CommitView({model: commit});
-			this.$("#commit-list").append(view.render().el);
+			var el = view.render().el
+			this.$("#commit-list").append(el);
+			if (this.nextAlt) {
+				$(el).addClass("alt");
+			}
+			this.nextAlt = !this.nextAlt;
         },
 
         addAll: function() {
