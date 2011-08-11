@@ -30,7 +30,11 @@
     <script type="text/template" id="item-template">
         <td class="commit-hash">${id}.${hash}</td>
         <td class="commit-issue">
+        	<img src="${issue.status.iconUrl}" alt="${issue.status.name}" title="${issue.status.name}"/>
 			<a href="${issue.link}" target="_blank">${issue.id}</a><br/>
+        </td>
+       	<td class="commit-issue-summary">
+        	${issue.summary}
         </td>
     </script>
 </body>
