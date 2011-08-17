@@ -14,16 +14,7 @@ class Cli {
     JerseyJiraRestClientFactory factory = new JerseyJiraRestClientFactory()
 	JiraRestClient restClient
 	NullProgressMonitor pm = new NullProgressMonitor()
-	def issues = [:].withDefault { key ->
-		try {
-			return restClient.getIssueClient().getIssue(key, pm) 		
-		} catch (RestClientException e) {
-			if (!e.getMessage().contains("Issue Does Not Exist")) {
-				throw e;
-			}
-			return null;
-		}
-	}
+	def issues;
 	def issueStateIconUrl = [
 		"Open": "/images/icons/status_open.gif",
 		"Reopened": "/images/icons/status_open.gif",
@@ -35,52 +26,76 @@ class Cli {
 		"Closed": "/images/icons/status_closed.gif",
 		"Completed": "/images/icons/status_closed.gif",
 		"Released": "/images/icons/status_closed.gif",
-		"Verified": "/images/icons/status_closed.gif"
+		"Verified": "/images/icons/status_closed.gif",
+		"Postponed": "/images/icons/status_down.gif"
 	]
 	def goodStates = [
-		"Released", "Completed", "Closed", "Resolved", "Pending Release", "Verified"
+		"Released", "Completed", "Closed", "Resolved", "Pending Release", "Verified", "Postponed"
 	]
 	def qaStates = [ "In QA" ]
 			
-    @Lazy(soft=true) def commitIssues = {
-        def commitLines = "git --git-dir=$config.repository/.git log --date=short --format=%h#%ad#%an#%s".execute().text.split('\n')
-        def commits = []
-        def commitCount = commitLines.size()
-        commitLines.eachWithIndex { line, i ->
-            def parts = line.split("#") as List
-            parts[3] = parts.size() == 3 ? "" : parts[3..-1].join("#")
-            def issues = []
-            parts[3].eachMatch( /([A-Z]+-[0-9]+)/) {
-				issues << [id:it[1], link:config.jiraUrl+"/browse/"+it[1]]
-            }
-            issues.each { issue ->
-	            def commit = [:]
-				commit.id = commitCount - i
-				commit.hash = parts[0]
-				commit.date = parts[1]
-				commit.author = parts[2]
-				commit.comment = parts[3]
-				commit.issue = issue
-	            commits << commit
-	        }
-        }
-        return commits
-    }()
+    def commitIssues;
 	
 	Cli() {
 		if (configFile.exists()) {
             config.load configFile.newInputStream()
         }
+        refreshCache()
 	}
-
-    @Get('/configured')
-    def get_configured() {
-        def json = new groovy.json.JsonBuilder(configured: (config.repository != null))
-		json.toString()
-    }
+	
+	def lastGitRefresh
+	def lastJiraRefresh
+	
+	def refreshCache() {
+		if (!lastGitRefresh || lastGitRefresh + 60L*1000L < System.currentTimeMillis()) {
+			lastGitRefresh = System.currentTimeMillis()
+			println "git refresh"
+			println "git --git-dir=$config.repository/.git pull".execute().text
+			commitIssues = {
+				def commitLines = "git --git-dir=$config.repository/.git log --date=short --format=%h#%ad#%an#%s".execute().text.split('\n')
+				def commits = []
+				def commitCount = commitLines.size()
+				commitLines.eachWithIndex { line, i ->
+					def parts = line.split("#") as List
+					parts[3] = parts.size() == 3 ? "" : parts[3..-1].join("#")
+					def issues = []
+					parts[3].eachMatch( /([A-Z]+-[0-9]+)/) {
+						issues << [id:it[1], link:config.jiraUrl+"/browse/"+it[1]]
+					}
+					issues.each { issue ->
+						def commit = [:]
+						commit.id = commitCount - i
+						commit.hash = parts[0]
+						commit.date = parts[1]
+						commit.author = parts[2]
+						commit.comment = parts[3]
+						commit.issue = issue
+						commits << commit
+					}
+				}
+				return commits
+			}()
+		}
+		
+		if (!lastJiraRefresh || lastJiraRefresh + 5L*60L*1000L < System.currentTimeMillis()) {
+			println "jira refresh"
+			lastJiraRefresh = System.currentTimeMillis()
+			issues = [:].withDefault { key ->
+				try {
+					return restClient.getIssueClient().getIssue(key, pm) 		
+				} catch (RestClientException e) {
+					if (!e.getMessage().contains("Issue Does Not Exist")) {
+						throw e
+					}
+					return null
+				}
+			}
+		}	
+	}
 
 	@Get('/commits')
 	def get_commits() {
+		refreshCache()
 		def from = ((params.from ?: 0) as Integer)
 		def to = from+49
 		def commits = commitIssues[from..to]
@@ -95,7 +110,7 @@ class Cli {
 					name: issue?.status?.name.toString(),
 					iconUrl: config.jiraUrl+issueStateIconUrl[issue?.status?.name.toString()],
 					releaseReady: goodStates.contains(issue?.status?.name.toString()),
-					inQA: qaStates.contains(issue.status?.name.toString()),
+					inQA: qaStates.contains(issue?.status?.name.toString()),
 					exists: issue != null
 				]
 			}
