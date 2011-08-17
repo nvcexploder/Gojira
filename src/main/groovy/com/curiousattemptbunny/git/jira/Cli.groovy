@@ -7,6 +7,7 @@ import com.atlassian.jira.rest.client.NullProgressMonitor
 import com.atlassian.jira.rest.client.domain.Issue 
 import com.atlassian.jira.rest.client.internal.jersey.JerseyJiraRestClientFactory 
 import com.atlassian.jira.rest.client.RestClientException
+import java.util.concurrent.ConcurrentHashMap
 
 class Cli {
     private static final File configFile = new File('config.properties')
@@ -14,6 +15,8 @@ class Cli {
     JerseyJiraRestClientFactory factory = new JerseyJiraRestClientFactory()
 	JiraRestClient restClient
 	NullProgressMonitor pm = new NullProgressMonitor()
+	static def NULL_ISSUE = [null:true]
+	
 	def issues;
 	def issueStateIconUrl = [
 		"Open": "/images/icons/status_open.gif",
@@ -27,7 +30,8 @@ class Cli {
 		"Completed": "/images/icons/status_closed.gif",
 		"Released": "/images/icons/status_closed.gif",
 		"Verified": "/images/icons/status_closed.gif",
-		"Postponed": "/images/icons/status_down.gif"
+		"Postponed": "/images/icons/status_down.gif",
+		"Coming Soon": "/images/icons/status_document.gif"
 	]
 	def goodStates = [
 		"Released", "Completed", "Closed", "Resolved", "Pending Release", "Verified", "Postponed"
@@ -40,7 +44,16 @@ class Cli {
 		if (configFile.exists()) {
             config.load configFile.newInputStream()
         }
+		restClient = factory.createWithBasicHttpAuthentication(new URI(config.jiraUrl), config.jiraUsername, config.jiraPassword)
         refreshCache()
+        // eagerly fetch issues
+        Thread.start {
+        	def issueIds = commitIssues.collect { it.issue.id }
+        	if (issueIds) {
+        		 issueIds[0..Math.min(500, issueIds.size()-1)].each { issues.get(it) }
+        	}
+        	Thread.sleep(5000)
+        }
 	}
 	
 	def lastGitRefresh
@@ -81,14 +94,17 @@ class Cli {
 		if (!lastJiraRefresh || lastJiraRefresh + 5L*60L*1000L < System.currentTimeMillis()) {
 			println "jira refresh"
 			lastJiraRefresh = System.currentTimeMillis()
-			issues = [:].withDefault { key ->
+			issues = ([:] as ConcurrentHashMap).withDefault { key ->
 				try {
+					println "getting issue: $key"
 					return restClient.getIssueClient().getIssue(key, pm) 		
 				} catch (RestClientException e) {
 					if (!e.getMessage().contains("Issue Does Not Exist")) {
-						throw e
+						throw new RuntimeException("Failed to lookup: $key", e)
 					}
-					return null
+					return NULL_ISSUE
+				} catch (Exception e) {
+					throw new RuntimeException("Failed to lookup: $key", e)
 				}
 			}
 		}	
@@ -105,18 +121,16 @@ class Cli {
 		def to = from+49
 		def commits = commitIssues[from..to]
 		
-		restClient = factory.createWithBasicHttpAuthentication(new URI(config.jiraUrl), config.jiraUsername, config.jiraPassword)
-		
 		commits.each { commit ->
 			if (commit.summary == null) {
 				def issue = issues[commit.issue.id]
 				commit.issue.summary = issue?.summary
 				commit.issue.status = [
-					name: issue?.status?.name.toString(),
+					name: issue?.status?.name.toString() ?: '',
 					iconUrl: config.jiraUrl+issueStateIconUrl[issue?.status?.name.toString()],
 					releaseReady: goodStates.contains(issue?.status?.name.toString()),
 					inQA: qaStates.contains(issue?.status?.name.toString()),
-					exists: issue != null
+					exists: issue != NULL_ISSUE
 				]
 			}
 		}
