@@ -62,14 +62,15 @@ class Cli {
 					parts[3].eachMatch( /([A-Z]+-[0-9]+)/) {
 						issues << [id:it[1], link:config.jiraUrl+"/browse/"+it[1]]
 					}
-					issues.each { issue ->
+					issues.eachWithIndex { issue, index ->
 						def commit = [:]
-						commit.id = commitCount - i
 						commit.hash = parts[0]
 						commit.date = parts[1]
 						commit.author = parts[2]
 						commit.comment = parts[3]
 						commit.issue = issue
+						commit.id = commit.hash + "-" + index
+						commit.index = commitCount - i
 						commits << commit
 					}
 				}
@@ -96,7 +97,11 @@ class Cli {
 	@Get('/commits')
 	def get_commits() {
 		refreshCache()
-		def from = ((params.from ?: 0) as Integer)
+		def from = 0
+		if (params.from) {
+			// very inefficient code!
+			from = commitIssues.indexOf( commitIssues.find { it.id == params.from } )
+		}
 		def to = from+49
 		def commits = commitIssues[from..to]
 		

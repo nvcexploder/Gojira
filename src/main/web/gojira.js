@@ -21,11 +21,14 @@ jQuery(function($){
     window.AppView = Backbone.View.extend({
         el: $("#app"),
         initialize: function() {
+        	_.bindAll(this, 'addOne', 'addAll', 'scroll'); 
+
         	$(window).bind("scroll", this.scroll);
         	
             Commits.bind("reset", this.addAll, this);
             Commits.bind("add", this.addOne, this);
             
+			this.fetchInProgress = true;
             Commits.fetch();
             
             this.nextAlt = true;
@@ -39,6 +42,7 @@ jQuery(function($){
 				$(el).addClass("alt");
 			}
 			this.nextAlt = !this.nextAlt;
+	        this.fetchInProgress = false;
         },
 
         addAll: function() {
@@ -46,9 +50,9 @@ jQuery(function($){
         },
         
         scroll: function() {
-        	console.log( $(window).scrollTop() + " vs " + $(document).height() + " - " + $(window).height() + " == " + ($(document).height() - $(window).height()) )
-			if ($(window).scrollTop() + 50 >= $(document).height() - $(window).height()){
-				Commits.fetch({ add: true, data: jQuery.param({from: Commits.size()}) })
+    		if (!this.fetchInProgress && $(window).scrollTop() + 50 >= $(document).height() - $(window).height()){
+				this.fetchInProgress = true;
+				Commits.fetch({ add: true, data: jQuery.param({from: Commits.models[Commits.models.length-1].get('id')}) });
 			}
         }
     });
