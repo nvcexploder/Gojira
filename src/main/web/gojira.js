@@ -4,7 +4,7 @@ jQuery(function($){
     });
 
     window.CommitList = Backbone.Collection.extend({
-        url: '/commits',
+        url: 'commits',
         model: Commit
     });
 
