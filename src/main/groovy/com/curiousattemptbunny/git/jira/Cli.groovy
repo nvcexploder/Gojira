@@ -105,6 +105,9 @@ class Cli {
 	}
 	
 	def run() {
+		if (config.port) {
+			Graffiti.config.port = config.port
+		}
 		Graffiti.root 'src/main/web'
 		Graffiti.serve '*.css'
 		Graffiti.serve this
